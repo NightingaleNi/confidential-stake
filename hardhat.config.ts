@@ -12,7 +12,6 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import "./tasks/accounts";
-import "./tasks/FHECounter";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 
