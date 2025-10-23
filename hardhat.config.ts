@@ -8,14 +8,17 @@ import "hardhat-gas-reporter";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
 import "solidity-coverage";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 import "./tasks/accounts";
 import "./tasks/FHECounter";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 
-const MNEMONIC: string = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
-const INFURA_API_KEY: string = vars.get("INFURA_API_KEY", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+const MNEMONIC: string = process.env.MNEMONIC || vars.get("MNEMONIC", "test test test test test test test test test test test junk");
+const PRIVATE_KEY: string | undefined = process.env.PRIVATE_KEY ? `0x${process.env.PRIVATE_KEY.replace(/^0x/, "")}` : undefined;
+const INFURA_API_KEY: string = process.env.INFURA_API_KEY || vars.get("INFURA_API_KEY", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -49,7 +52,7 @@ const config: HardhatUserConfig = {
       url: "http://localhost:8545",
     },
     sepolia: {
-      accounts: {
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : {
         mnemonic: MNEMONIC,
         path: "m/44'/60'/0'/0/",
         count: 10,
