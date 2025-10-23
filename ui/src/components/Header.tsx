@@ -7,10 +7,8 @@ export function Header() {
       <div className="header-container">
         <div className="header-content">
           <div className="header-left">
-            <h1 className="header-title">
-              
-            </h1>
-            
+            <h1 className="header-title">Confidential Staking</h1>
+            <div className="header-subtitle">Stake cETH to earn encrypted cUSDT rewards</div>
           </div>
           <ConnectButton />
         </div>

@@ -1,0 +1,207 @@
+.staking-app {
+  padding: 2rem 1.5rem 3rem;
+}
+
+.staking-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.staking-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.staking-card.warning {
+  border-color: rgba(190, 18, 60, 0.2);
+  background: linear-gradient(180deg, rgba(254, 226, 226, 0.6), rgba(254, 202, 202, 0.5));
+}
+
+.staking-card.info {
+  border-color: rgba(37, 99, 235, 0.15);
+  background: linear-gradient(180deg, rgba(219, 234, 254, 0.6), rgba(191, 219, 254, 0.5));
+}
+
+.staking-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.staking-card p {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.staking-card.warning p,
+.staking-card.info p {
+  color: #1f2937;
+}
+
+.staking-card code {
+  background: rgba(15, 23, 42, 0.08);
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.section-header p {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.badge {
+  align-self: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.metrics-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.9));
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.metric-label {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.metric-value.accent {
+  color: #2563eb;
+}
+
+.metric-value.muted {
+  font-size: 1rem;
+  color: #475569;
+}
+
+.metric.span-two {
+  grid-column: span 2;
+}
+
+.actions .section-header {
+  margin-bottom: 1.25rem;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.action-buttons button {
+  flex: 1 1 200px;
+  padding: 0.95rem 1.25rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-buttons button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-buttons button.primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
+}
+
+.action-buttons button.secondary {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: white;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.2);
+}
+
+.action-buttons button.accent {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 14px 30px rgba(34, 197, 94, 0.25);
+}
+
+.action-buttons button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 32px rgba(15, 23, 42, 0.18);
+}
+
+.status-message {
+  margin-top: 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.status-message.neutral {
+  background: rgba(15, 23, 42, 0.05);
+  color: #1f2937;
+}
+
+.status-message.error {
+  background: rgba(248, 113, 113, 0.18);
+  color: #b91c1c;
+}
+
+.status-message.info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .staking-app {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .staking-card {
+    padding: 1.5rem;
+  }
+
+  .metric.span-two {
+    grid-column: span 1;
+  }
+}

@@ -4,7 +4,9 @@ import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
 import { config } from './config/wagmi';
+import { Header } from './components/Header';
 import { StakingApp } from './components/StakingApp';
+import './App.css';
 
 const queryClient = new QueryClient();
 
@@ -13,7 +15,8 @@ function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider locale="en">
-          <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+          <div className="app-shell">
+            <Header />
             <StakingApp />
           </div>
         </RainbowKitProvider>

@@ -27,6 +27,12 @@
   color: #111827;
 }
 
+.header-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
 .header-badge {
   margin-left: 0.75rem;
   padding: 0.25rem 0.5rem;
