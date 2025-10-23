@@ -76,10 +76,95 @@
   font-weight: 600;
 }
 
+.badge.subtle {
+  background: rgba(148, 163, 184, 0.25);
+  color: #475569;
+  font-size: 0.75rem;
+}
+
 .metrics-grid {
   display: grid;
   gap: 1.25rem;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.tool-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.95));
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.tool-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.tool-card p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.tool-card button {
+  align-self: flex-start;
+  padding: 0.75rem 1.1rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tool-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.tool-card button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(79, 70, 229, 0.25);
+}
+
+.indicator-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.indicator {
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.indicator.success {
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+}
+
+.indicator.pending {
+  background: rgba(250, 204, 21, 0.2);
+  color: #92400e;
 }
 
 .metric {
@@ -177,6 +262,10 @@
   font-weight: 500;
 }
 
+.tools .status-message {
+  margin-top: 1rem;
+}
+
 .status-message.neutral {
   background: rgba(15, 23, 42, 0.05);
   color: #1f2937;
@@ -203,5 +292,9 @@
 
   .metric.span-two {
     grid-column: span 1;
+  }
+
+  .tool-grid {
+    grid-template-columns: 1fr;
   }
 }
