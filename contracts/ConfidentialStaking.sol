@@ -1,134 +1,143 @@
-// SPDX-License-Identifier: BSD-3-Clause-Clear
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
-interface IConfidentialETH {
-    function mint(address to) external;
-}
+import {ConfidentialETH} from "./ConfidentialETH.sol";
+import {ConfidentialUSDT} from "./ConfidentialUSDT.sol";
 
-interface IConfidentialUSDT {
-    function mint(address to, uint64 amount) external;
-}
-
-/// @title Confidential Staking for cETH with cUSDT rewards
-/// @notice Users stake cETH (unit-based) and accrue cUSDT rewards at a fixed rate
-/// @dev Token amounts use 6 decimals (1 token == 1_000_000 units)
+/// @title Confidential staking contract for cETH deposits and cUSDT rewards
+/// @notice Users stake discrete 1 cETH units to accrue 10 cUSDT per day in rewards.
 contract ConfidentialStaking is SepoliaConfig {
-    // Tokens
-    IConfidentialETH public immutable cETH;
-    IConfidentialUSDT public immutable cUSDT;
+    error InsufficientStaked();
+    error NothingToClaim();
+    error AccrualOverflow();
 
-    // Accounting (all amounts in 6-decimal base units)
-    mapping(address => uint64) private _staked; // user staked cETH units
-    mapping(address => uint64) private _accruedUSDT; // user accrued cUSDT units
-    mapping(address => uint256) private _lastUpdate; // last accrual timestamp
+    struct Account {
+        uint64 staked;
+        uint64 accruedRewards;
+        uint64 lastUpdate;
+    }
 
-    // 1 cETH earns 10 cUSDT per day (per-second pro‑rata)
-    // With 6 decimals: 10 cUSDT/day => 10_000_000 units per 86_400 seconds
-    uint64 public constant RATE_PER_DAY_USDT = 10_000_000; // 10 cUSDT (6 decimals)
-    uint32 public constant SECONDS_PER_DAY = 86_400;
-    uint64 public constant ONE_TOKEN = 1_000_000; // 1 token in 6 decimals
+    uint64 public constant ONE_TOKEN = 1_000_000; // 1 token with 6 decimals
+    uint64 public constant RATE_PER_DAY_USDT = 10_000_000; // 10 cUSDT per day (6 decimals)
+    uint64 public constant SECONDS_PER_DAY = 86_400;
+
+    ConfidentialETH public immutable cETH;
+    ConfidentialUSDT public immutable cUSDT;
+
+    mapping(address user => Account) private accounts;
 
     event Staked(address indexed user, uint64 units);
     event Withdrawn(address indexed user, uint64 units);
     event Claimed(address indexed user, uint64 amountUSDT);
 
-    constructor(address _cETH, address _cUSDT) {
-        require(_cETH != address(0) && _cUSDT != address(0), "Invalid token");
-        cETH = IConfidentialETH(_cETH);
-        cUSDT = IConfidentialUSDT(_cUSDT);
+    constructor(address cEthAddress, address cUsdtAddress) {
+        cETH = ConfidentialETH(cEthAddress);
+        cUSDT = ConfidentialUSDT(cUsdtAddress);
     }
 
-    // ============ Views (must not use msg.sender) ============
+    function stakeOne() external {
+        _updateRewards(msg.sender);
+
+        Account storage account = accounts[msg.sender];
+        account.staked += ONE_TOKEN;
+        account.lastUpdate = uint64(block.timestamp);
+
+        emit Staked(msg.sender, ONE_TOKEN);
+    }
+
+    function withdrawOne() external {
+        _updateRewards(msg.sender);
+
+        Account storage account = accounts[msg.sender];
+        if (account.staked < ONE_TOKEN) {
+            revert InsufficientStaked();
+        }
+
+        account.staked -= ONE_TOKEN;
+        account.lastUpdate = uint64(block.timestamp);
+
+        emit Withdrawn(msg.sender, ONE_TOKEN);
+    }
+
+    function claim() external {
+        _updateRewards(msg.sender);
+
+        Account storage account = accounts[msg.sender];
+        uint64 rewards = account.accruedRewards;
+        if (rewards == 0) {
+            revert NothingToClaim();
+        }
+
+        account.accruedRewards = 0;
+        account.lastUpdate = uint64(block.timestamp);
+
+        cUSDT.mint(msg.sender, rewards);
+
+        emit Claimed(msg.sender, rewards);
+    }
 
     function getStaked(address user) external view returns (uint64) {
-        return _staked[user];
+        return accounts[user].staked;
     }
 
     function getAccruedUSDT(address user) external view returns (uint64) {
-        // Include pending accrual since last update
-        (uint64 newAccrual,) = _pendingAccrual(user);
-        return _accruedUSDT[user] + newAccrual;
+        Account storage account = accounts[user];
+
+        if (account.lastUpdate == 0 || account.staked == 0) {
+            return account.accruedRewards;
+        }
+
+        uint256 additional = _pendingRewards(account);
+        uint256 total = uint256(account.accruedRewards) + additional;
+        if (total > type(uint64).max) {
+            total = type(uint64).max;
+        }
+        return uint64(total);
     }
 
-    function getLastUpdate(address user) external view returns (uint256) {
-        return _lastUpdate[user];
+    function getLastUpdate(address user) external view returns (uint64) {
+        return accounts[user].lastUpdate;
     }
 
     function interestRatePerDay() external pure returns (uint64) {
         return RATE_PER_DAY_USDT;
     }
 
-    // ============ Mutations ============
+    function _updateRewards(address user) internal {
+        Account storage account = accounts[user];
+        uint64 last = account.lastUpdate;
+        uint64 current = uint64(block.timestamp);
 
-    /// @notice Stake exactly 1 cETH unit (1e6)
-    /// @dev For simplicity, this demo stakes in unit steps due to demo token interface
-    function stakeOne() external {
-        _accrue(msg.sender);
-        unchecked {
-            _staked[msg.sender] += ONE_TOKEN;
-        }
-        emit Staked(msg.sender, ONE_TOKEN);
-    }
-
-    /// @notice Withdraw exactly 1 cETH unit (1e6) and receive 1 cETH minted back
-    function withdrawOne() external {
-        require(_staked[msg.sender] >= ONE_TOKEN, "Insufficient staked");
-        _accrue(msg.sender);
-        unchecked {
-            _staked[msg.sender] -= ONE_TOKEN;
-        }
-        // Return 1 cETH to the user via token mint (demo token mints fixed 1e6)
-        cETH.mint(msg.sender);
-        emit Withdrawn(msg.sender, ONE_TOKEN);
-    }
-
-    /// @notice Claim all accrued cUSDT interest
-    function claim() external {
-        _accrue(msg.sender);
-        uint64 amount = _accruedUSDT[msg.sender];
-        require(amount > 0, "Nothing to claim");
-        _accruedUSDT[msg.sender] = 0;
-        cUSDT.mint(msg.sender, amount);
-        emit Claimed(msg.sender, amount);
-    }
-
-    // ============ Internal helpers ============
-
-    function _pendingAccrual(address user) internal view returns (uint64 added, uint256 newTs) {
-        uint256 last = _lastUpdate[user];
-        uint256 ts = block.timestamp;
-        if (last == 0) return (0, ts);
-        uint256 elapsed = ts - last;
-        if (elapsed == 0) return (0, ts);
-
-        // Formula:
-        // added = staked * RATE_PER_DAY_USDT * elapsed / SECONDS_PER_DAY / ONE_TOKEN
-        // Reduce to avoid overflow: ((staked * elapsed) / ONE_TOKEN) * RATE_PER_DAY_USDT / SECONDS_PER_DAY
-        uint256 staked = _staked[user];
-        uint256 base = (staked * elapsed) / ONE_TOKEN; // scaled down to tokens
-        uint256 inc = (base * RATE_PER_DAY_USDT) / SECONDS_PER_DAY;
-        if (inc > type(uint64).max) {
-            added = type(uint64).max;
-        } else {
-            added = uint64(inc);
-        }
-        newTs = ts;
-    }
-
-    function _accrue(address user) internal {
-        (uint64 add_, uint256 ts) = _pendingAccrual(user);
-        if (_lastUpdate[user] == 0) {
-            _lastUpdate[user] = ts;
+        if (last == 0) {
+            account.lastUpdate = current;
             return;
         }
-        if (add_ > 0) {
-            unchecked {
-                _accruedUSDT[user] += add_;
-            }
+
+        if (account.staked == 0) {
+            account.lastUpdate = current;
+            return;
         }
-        _lastUpdate[user] = ts;
+
+        uint256 additional = _pendingRewards(account);
+        if (additional > 0) {
+            uint256 newAccrued = uint256(account.accruedRewards) + additional;
+            if (newAccrued > type(uint64).max) {
+                revert AccrualOverflow();
+            }
+            account.accruedRewards = uint64(newAccrued);
+        }
+
+        account.lastUpdate = current;
+    }
+
+    function _pendingRewards(Account storage account) internal view returns (uint256) {
+        uint256 elapsed = block.timestamp - uint256(account.lastUpdate);
+        if (elapsed == 0) {
+            return 0;
+        }
+
+        return (uint256(account.staked) * RATE_PER_DAY_USDT * elapsed) / (SECONDS_PER_DAY * ONE_TOKEN);
     }
 }
-
