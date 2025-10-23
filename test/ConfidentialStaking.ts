@@ -70,7 +70,9 @@ describe("ConfidentialStaking", function () {
     expect(await staking.getStaked(user.address)).to.equal(0);
 
     // Second withdraw should revert
-    await expect(staking.connect(user).withdrawOne()).to.be.revertedWith("Insufficient staked");
+    await expect(staking.connect(user).withdrawOne()).to.be.revertedWithCustomError(
+      staking,
+      "InsufficientStaked"
+    );
   });
 });
-
