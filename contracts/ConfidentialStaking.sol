@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
-
+import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {ConfidentialETH} from "./ConfidentialETH.sol";
 import {ConfidentialUSDT} from "./ConfidentialUSDT.sol";
 
 /// @title Confidential staking contract for cETH deposits and cUSDT rewards
 /// @notice Users stake discrete 1 cETH units to accrue 10 cUSDT per day in rewards.
-contract ConfidentialStaking is SepoliaConfig {
+contract ConfidentialStaking is ZamaEthereumConfig {
     error InsufficientStaked();
     error NothingToClaim();
     error AccrualOverflow();
